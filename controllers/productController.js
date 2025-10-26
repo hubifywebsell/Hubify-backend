@@ -1,34 +1,41 @@
+import mongoose from "mongoose";
 import Product from "../models/product.js";
 import { isAdmin } from "./userController.js";
 
+async function findProductByIdOrProductID(id) {
+    // try as ObjectId first
+    if (mongoose.isValidObjectId(id)) {
+        const p = await Product.findById(id);
+        if (p) return p;
+    }
+    // fallback to productID field
+    return await Product.findOne({ productID: id });
+}
+
 export async function createProduct(req, res) {
-    
-    if(!isAdmin(req)){
-        res.status(403).json({
-            message: "You are not authorized to create a product"
-        });
+    if (!(await isAdmin(req))) {
+        res.status(403).json({ message: "You are not authorized to create a product" });
         return;
     }
 
-	try {
-        
-		const productData = req.body;
+    try {
+        const productData = req.body;
+        if (!productData || Object.keys(productData).length === 0) {
+            res.status(400).json({ message: "Product data is required" });
+            return;
+        }
 
-		const product = new Product(productData);
+        const product = new Product(productData);
+        await product.save();
 
-		await product.save();
-
-		res.json({
-			message: "Product created successfully",
-			product: product,
-		});
-        
-	} catch (err) {
-        console.error(err);
-        res.status(500).json({
-            message: "Failed to create product",
+        res.status(201).json({
+            message: "Product created successfully",
+            product: product,
         });
-	}
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Failed to create product" });
+    }
 }
 
 export async function getProducts(req,res){
@@ -104,11 +111,7 @@ export async function getProductId(req,res){
     try{
         const productID = req.params.productID;
 
-        const product = await Product.findOne(
-            {
-                productID : productID
-            }
-        )
+        const product = await findProductByIdOrProductID(productID)
         if(product == null){
             res.status(404).json({
                 message: "Product not found"
