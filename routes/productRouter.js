@@ -1,3 +1,4 @@
+
 import express from 'express';
 import { createProduct, deleteProduct, getProductId, getProducts, updateProduct } from '../controllers/productController.js';
 
