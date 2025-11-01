@@ -16,19 +16,20 @@ const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(",")
   : ["http://localhost:5173"];
 
+import cors from "cors";
+
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log("❌ Blocked CORS request from:", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true, // allow cookies/headers
+    origin: [
+      "https://hubify-origin-frontend-pl16.vercel.app", // ✅ your frontend domain
+      "http://localhost:5173", // ✅ optional for local testing
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true, // ✅ if you send cookies or tokens
   })
 );
+
 
 app.use(express.json());
 
